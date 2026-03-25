@@ -1,0 +1,3 @@
+sonar.projectKey=ci-cd-app
+sonar.projectName=CI-CD App
+sonar.sources=.
