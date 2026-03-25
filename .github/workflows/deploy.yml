@@ -29,9 +29,9 @@ jobs:
             -Dsonar.qualitygate.wait=true
 
       - name: K6 Test
-        uses: grafana/k6-action@v0.2.0
-        with:
-          script: load-test.js
+  uses: grafana/k6-action@v0.2.0
+  with:
+    filename: load-test.js
 
   build:
     needs: quality
