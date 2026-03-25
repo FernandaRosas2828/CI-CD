@@ -33,14 +33,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # 🔥 Convertir repo a minúsculas
+      - name: Set lowercase repo
+        run: echo "REPO_LC=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Login GHCR
         run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Build image
-        run: docker build -t ghcr.io/${{ github.repository }}:latest .
+        run: docker build -t ghcr.io/$REPO_LC:latest .
 
       - name: Push image
-        run: docker push ghcr.io/${{ github.repository }}:latest
+        run: docker push ghcr.io/$REPO_LC:latest
 
   deploy:
     needs: build
@@ -56,5 +60,5 @@ jobs:
           script: |
             docker stop my-node-app || true
             docker rm my-node-app || true
-            docker pull ghcr.io/${{ github.repository }}:latest
-            docker run -d -p 80:3000 --name my-node-app ghcr.io/${{ github.repository }}:latest
+            docker pull ghcr.io/fernandarosas2828/ci-cd:latest
+            docker run -d -p 80:3000 --name my-node-app ghcr.io/fernandarosas2828/ci-cd:latest
