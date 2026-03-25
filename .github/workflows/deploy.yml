@@ -11,12 +11,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # 🔹 SonarQube
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@master
         env:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=ci-cd-project
+            -Dsonar.sources=.
 
+      # 🔹 K6 Test
       - name: Run K6 test
         uses: grafana/k6-action@v0.2.0
         with:
@@ -29,16 +35,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 🔥 Convertir repo a minúsculas (AQUÍ ESTÁ LA CLAVE)
+      # 🔹 Convertir repo a minúsculas
       - name: Set lowercase repo
         run: echo "REPO_LC=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
+      # 🔹 Login GHCR
       - name: Login GHCR
         run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
+      # 🔹 Build Docker
       - name: Build image
         run: docker build -t ghcr.io/${{ env.REPO_LC }}:latest .
 
+      # 🔹 Push Docker
       - name: Push image
         run: docker push ghcr.io/${{ env.REPO_LC }}:latest
 
@@ -47,6 +56,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 🔹 Convertir repo a minúsculas
+      - name: Set lowercase repo
+        run: echo "REPO_LC=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      # 🔹 Deploy por SSH
       - name: Deploy SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -56,5 +70,5 @@ jobs:
           script: |
             docker stop my-node-app || true
             docker rm my-node-app || true
-            docker pull ghcr.io/${{ github.repository }}:latest
-            docker run -d -p 80:3000 --name my-node-app ghcr.io/${{ github.repository }}:latest
+            docker pull ghcr.io/${{ env.REPO_LC }}:latest
+            docker run -d -p 80:3000 --name my-node-app ghcr.io/${{ env.REPO_LC }}:latest
